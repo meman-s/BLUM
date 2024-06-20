@@ -5,8 +5,8 @@ import tkinter as tk
 from PIL import Image, ImageTk, ImageGrab
 
 # Координаты линии, по которой будем отслеживать изменения цвета
-x_start, y_start = 1777, 577
-x_end, y_end = 2532, 556
+x_start, y_start = 1777, 556
+x_end, y_end = 2532, 577
 
 # Цветовые диапазоны для различных объектов (по результатам вашего анализа)
 color_ranges = {

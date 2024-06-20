@@ -12,13 +12,10 @@ x_end, y_end = 2532, 577
 
 # Цветовые диапазоны для различных объектов (примерные значения, замените на свои)
 color_ranges = {
-    "leaf": ([45, 170, 12], [124, 244, 255]),  # Зеленый
+    "leaf": ([43, 138, 255], [43, 138, 255]),  # Зеленый
     "bomb": ([130, 130, 139], [0, 17, 139]),  # Серый
     "ice": ([242, 231, 149], [94, 98, 242])  # Голубой
 }
-
-# Список для хранения позиций нажатий
-click_positions = []
 
 
 def capture_screen():
@@ -40,7 +37,6 @@ def process_line(frame):
         return []
 
     hsv_line = cv2.cvtColor(line, cv2.COLOR_BGR2HSV)
-
     objects = []
 
     for obj_type, (lower, upper) in color_ranges.items():
@@ -58,9 +54,8 @@ def process_line(frame):
 
 def click_object(obj):
     x, y = obj['position']
-    # pyautogui.click(x, y)
+    pyautogui.click(x, y)
     print(f"Clicked on {obj['type']} at ({x}, {y})")
-    click_positions.append((x, y))  # Добавляем позицию клика в список
 
 
 def calibrate_line():
@@ -107,40 +102,19 @@ def capture_and_show_color():
     root.mainloop()
 
 
-def show_frame_with_click_points(frame):
-    img = Image.fromarray(frame)
-    draw = ImageGrab.Draw(img)
-    for pos in click_positions:
-        draw.ellipse((pos[0] - 5, pos[1] - 5, pos[0] + 5, pos[1] + 5), fill=(255, 0, 0))
-    img.show()
-
-
 def main():
-    # calibrate_line()
-    # frame = capture_screen()
-    # visualize_line(frame)
-
     while True:
+        if keyboard.is_pressed('esc'):
+            print("Программа остановлена пользователем.")
+            break
+
         frame = capture_screen()
         objects = process_line(frame)
 
         for obj in objects:
             click_object(obj)
 
-        show_frame_with_click_points(frame)
-        # Отображение точек нажатий
-        for pos in click_positions:
-            cv2.circle(frame, pos, 5, (0, 0, 255), -1)
-
-        cv2.imshow("Frame with Click Points", frame)
-
-        # Нажмите ESC для выхода
-        if cv2.waitKey(1) & 0xFF == 27:
-            break
-
         time.sleep(0.1)  # Немного задержки, чтобы уменьшить нагрузку на систему
-
-    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
