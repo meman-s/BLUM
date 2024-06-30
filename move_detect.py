@@ -2,16 +2,11 @@ import pyautogui
 import numpy as np
 import time
 import cv2
-from PIL import ImageGrab, Image, ImageTk
-import tkinter as tk
+from PIL import ImageGrab
+import keyboard
 
 # Начальная точка: (1777, 577)
-# Переместите мышь в конечную точку и нажмите Enter.
-# Нажмите Enter, когда будете готовы.
 # Конечная точка: (2532, 556)
-
-# Координаты линии, по которой будем отслеживать изменения цвета
-
 x_start, y_start = 1777, 577
 x_end, y_end = 2532, 556
 
@@ -68,44 +63,6 @@ def calibrate_line():
     print(f"Конечная точка: ({x_end}, {y_end})")
 
 
-def visualize_line(frame):
-    cv2.line(frame, (x_start, y_start), (x_end, y_end), (0, 0, 255), 2)
-    img = Image.fromarray(frame)
-    img.show()
-
-
-def capture_and_show_color():
-    print("Нажмите Enter для захвата экрана.")
-    input()
-    frame = capture_screen()
-
-    root = tk.Tk()
-    root.title("Выберите объект и нажмите Enter")
-    canvas = tk.Canvas(root, width=frame.shape[1], height=frame.shape[0])
-    canvas.pack()
-
-    img = Image.fromarray(frame)
-    photo = ImageTk.PhotoImage(img)
-    canvas.create_image(0, 0, anchor=tk.NW, image=photo)
-
-    def get_color(event):
-        x, y = event.x, event.y
-        pixel_color = frame[y, x]
-        hsv_color = cv2.cvtColor(np.uint8([[pixel_color]]), cv2.COLOR_BGR2HSV)[0][0]
-        print(f"Цвет выбранного объекта: BGR={pixel_color}, HSV={hsv_color}")
-        root.destroy()
-
-    canvas.bind("<Button-1>", get_color)
-    root.mainloop()
-
-
-def show_frame_with_click_points(frame):
-    for point in click_points:
-        cv2.circle(frame, point, 5, (0, 0, 255), -1)
-    cv2.imshow("Frame with Click Points", frame)
-    cv2.waitKey(1)
-
-
 def main():
     while True:
         frame = capture_screen()
@@ -114,29 +71,23 @@ def main():
         for obj in objects:
             click_object(obj)
 
-        show_frame_with_click_points(frame)
-
-        if cv2.waitKey(1) == 27:  # ESC key to stop
-            break
-
         time.sleep(0.1)  # Немного задержки, чтобы уменьшить нагрузку на систему
 
-    cv2.destroyAllWindows()
+        if keyboard.is_pressed("esc"):  # ESC key to stop
+            print("Программа остановлена.")
+            break
 
 
 if __name__ == "__main__":
     while True:
         print("Выберите опцию:")
         print("1. Калибровать линию")
-        print("2. Калибровать цвет")
-        print("3. Запустить основную программу")
+        print("2. Запустить основную программу")
         choice = input("Введите номер опции: ")
 
         if choice == "1":
             calibrate_line()
         elif choice == "2":
-            capture_and_show_color()
-        elif choice == "3":
             main()
         else:
             print("Неверный выбор, попробуйте снова.")
