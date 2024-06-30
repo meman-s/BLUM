@@ -78,8 +78,6 @@ def main():
         for obj in objects:
             click_object(obj)
 
-        time.sleep(0.1)  # Немного задержки, чтобы уменьшить нагрузку на систему
-
 
 if __name__ == "__main__":
     main()
