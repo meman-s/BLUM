@@ -7,8 +7,8 @@ import keyboard
 
 # Начальная точка: (1777, 577)
 # Конечная точка: (2532, 556)
-x_start, y_start = 1777, 577
-x_end, y_end = 2532, 556
+x_start, y_start = 1777, 556
+x_end, y_end = 2532, 577
 
 click_points = []
 
