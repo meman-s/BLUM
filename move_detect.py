@@ -5,12 +5,10 @@ import cv2
 from PIL import ImageGrab
 import keyboard
 
-# Начальная точка: (1777, 577)
-# Конечная точка: (2532, 556)
-x_start, y_start = 1777, 556
-x_end, y_end = 2532, 577
-
-click_points = []
+# Начальная точка: (2113, 500)
+# Конечная точка: (2862, 500)
+x_start, y_start = 2113, 500
+x_end, y_end = 2862, 500
 
 
 def capture_screen():
@@ -20,25 +18,34 @@ def capture_screen():
     return frame
 
 
-def process_line(frame):
+def process_line(frame, prev_frame):
     global x_start, y_start, x_end, y_end
     if y_end >= frame.shape[0] or x_end >= frame.shape[1] or y_start >= frame.shape[0] or x_start >= frame.shape[1]:
         print("Координаты линии выходят за пределы изображения.")
         return []
     line = frame[y_start:y_end + 1, x_start:x_end + 1]
-    if line.size == 0:
+    prev_line = prev_frame[y_start:y_end + 1, x_start:x_end + 1]
+    if line.size == 0 or prev_line.size == 0:
         print("Линия пуста. Проверьте координаты.")
         return []
 
     gray_line = cv2.cvtColor(line, cv2.COLOR_BGR2GRAY)
-    _, thresh = cv2.threshold(gray_line, 1, 255, cv2.THRESH_BINARY)
+    prev_gray_line = cv2.cvtColor(prev_line, cv2.COLOR_BGR2GRAY)
+    diff = cv2.absdiff(gray_line, prev_gray_line)
+    _, thresh = cv2.threshold(diff, 30, 255, cv2.THRESH_BINARY)
     contours, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     objects = []
 
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
-        objects.append({"position": (x + x_start, y + y_start)})
+        # Отладочная информация
+        print(f"Contour: x={x}, y={y}, w={w}, h={h}")
+        # Добавляем фильтрацию по ширине и высоте, чтобы отсеять линии фона
+        if 3 < w < 50:
+            center_x = x + x_start + w // 2
+            center_y = y + y_start + h // 2
+            objects.append({"position": (center_x, center_y)})
 
     return objects
 
@@ -46,7 +53,6 @@ def process_line(frame):
 def click_object(obj):
     x, y = obj['position']
     pyautogui.click(x, y)
-    click_points.append((x, y))
     print(f"Clicked at ({x}, {y})")
 
 
@@ -64,12 +70,18 @@ def calibrate_line():
 
 
 def main():
+    prev_frame = None
     while True:
         frame = capture_screen()
-        objects = process_line(frame)
+        if prev_frame is None:
+            prev_frame = frame
+            continue
 
+        objects = process_line(frame, prev_frame)
         for obj in objects:
             click_object(obj)
+
+        prev_frame = frame
 
         time.sleep(0.1)  # Немного задержки, чтобы уменьшить нагрузку на систему
 
