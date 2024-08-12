@@ -4,9 +4,11 @@ import time
 import cv2
 from PIL import ImageGrab
 import keyboard
+import threading
 
-x_start, y_start = 2113, 500
-x_end, y_end = 2862, 500
+# Начальные и конечные координаты
+x_start, y_start = 2053, 500
+x_end, y_end = 2779, 500
 
 
 def capture_screen():
@@ -16,8 +18,9 @@ def capture_screen():
     return frame
 
 
-def is_gray(pixel, threshold=10):
-    return abs(int(pixel[0]) - int(pixel[1])) < threshold and abs(int(pixel[1]) - int(pixel[2])) < threshold
+def is_gray(pixel):
+    return (pixel[0] > 0 and pixel[1] > 0 and pixel[2] > 0) and \
+           (pixel[0] < 230 and pixel[1] < 230 and pixel[2] < 230)
 
 
 def process_line(frame, prev_frame):
@@ -73,6 +76,14 @@ def calibrate_line():
     print(f"Конечная точка: ({x_end}, {y_end})")
 
 
+def periodic_click(x, y, interval, stop_event):
+    """Функция для периодического клика на указанные координаты."""
+    while not stop_event.is_set():
+        pyautogui.click(x, y)
+        print(f"Клик по ({x}, {y})")
+        time.sleep(interval)
+
+
 def main():
     prev_frame = None
     while True:
@@ -87,7 +98,7 @@ def main():
 
         prev_frame = frame
 
-        time.sleep(0.01)  # Reduced delay for faster processing
+        time.sleep(0.001)  # Reduced delay for faster processing
 
         if keyboard.is_pressed("esc"):  # ESC key to stop
             print("Программа остановлена.")
@@ -95,6 +106,13 @@ def main():
 
 
 if __name__ == "__main__":
+    # Создаем событие для остановки
+    stop_event = threading.Event()
+
+    # Запускаем периодический клик в отдельном потоке
+    periodic_click_thread = threading.Thread(target=periodic_click, args=(2416, 1364, 40, stop_event))
+    periodic_click_thread.start()
+
     while True:
         print("Выберите опцию:")
         print("1. Калибровать линию")
@@ -104,6 +122,13 @@ if __name__ == "__main__":
         if choice == "1":
             calibrate_line()
         elif choice == "2":
+            time.sleep(2)
             main()
         else:
             print("Неверный выбор, попробуйте снова.")
+
+        # Прерываем работу периодического клика
+        stop_event.set()
+        periodic_click_thread.join()
+
+
