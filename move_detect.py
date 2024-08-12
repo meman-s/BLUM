@@ -6,9 +6,12 @@ from PIL import ImageGrab
 import keyboard
 import threading
 
-# Начальные и конечные координаты
-x_start, y_start = 2053, 500
-x_end, y_end = 2779, 500
+# Начальные и конечные координаты для двух линий
+x_start1, y_start1 = 2053, 500
+x_end1, y_end1 = 2779, 500
+
+x_start2, y_start2 = 2053, 600  # Вторая линия на 100 пикселей ниже первой
+x_end2, y_end2 = 2779, 600
 
 # Интервалы
 screenshot_interval = 0  # Интервал между захватами экрана в секундах
@@ -34,13 +37,14 @@ def capture_screen():
 
 def is_gray(pixel):
     """Проверяет, является ли пиксель серым по указанным условиям."""
-    return (pixel[0] > 30 and pixel[1] > 30 and pixel[2] > 30) and \
-           (pixel[0] < 255 and pixel[1] < 230 and pixel[2] < 230)
+    r, g, b = pixel
+    return g - r < 20 or g - b < 20 or g < 200
+    # return (pixel[0] > 30 and pixel[1] > 30 and pixel[2] > 30) and \
+    #        (pixel[0] < 255 and pixel[1] < 230 and pixel[2] < 230)
 
 
-def process_line(frame, prev_frame, clicked_positions):
+def process_line(frame, prev_frame, clicked_positions, x_start, y_start, x_end, y_end):
     """Обрабатывает линию для поиска объектов и избегает повторных кликов на уже кликнутых местах."""
-    global x_start, y_start, x_end, y_end
     if frame is None or prev_frame is None:
         print("Отсутствуют данные для обработки.")
         return []
@@ -102,18 +106,28 @@ def click_object(obj):
         print(f"Ошибка клика по ({x}, {y}): {e}")
 
 
-def calibrate_line():
-    """Калибрует начальные и конечные точки линии."""
-    global x_start, y_start, x_end, y_end
-    print("Калибровка линии. Переместите мышь в начальную точку и нажмите Enter.")
+def calibrate_lines():
+    """Калибрует начальные и конечные точки двух линий."""
+    global x_start1, y_start1, x_end1, y_end1, x_start2, y_start2, x_end2, y_end2
+    print("Калибровка первой линии. Переместите мышь в начальную точку и нажмите Enter.")
     input("Нажмите Enter, когда будете готовы.")
-    x_start, y_start = pyautogui.position()
-    print(f"Начальная точка: ({x_start}, {y_start})")
+    x_start1, y_start1 = pyautogui.position()
+    print(f"Начальная точка первой линии: ({x_start1}, {y_start1})")
 
     print("Переместите мышь в конечную точку и нажмите Enter.")
     input("Нажмите Enter, когда будете готовы.")
-    x_end, y_end = pyautogui.position()
-    print(f"Конечная точка: ({x_end}, {y_end})")
+    x_end1, y_end1 = pyautogui.position()
+    print(f"Конечная точка первой линии: ({x_end1}, {y_end1})")
+
+    print("Калибровка второй линии. Переместите мышь в начальную точку и нажмите Enter.")
+    input("Нажмите Enter, когда будете готовы.")
+    x_start2, y_start2 = pyautogui.position()
+    print(f"Начальная точка второй линии: ({x_start2}, {y_start2})")
+
+    print("Переместите мышь в конечную точку и нажмите Enter.")
+    input("Нажмите Enter, когда будете готовы.")
+    x_end2, y_end2 = pyautogui.position()
+    print(f"Конечная точка второй линии: ({x_end2}, {y_end2})")
 
 
 def periodic_click(x, y, interval, stop_event):
@@ -151,8 +165,14 @@ def main():
             time.sleep(processing_interval)
             continue
 
-        objects = process_line(frame, prev_frame, clicked_positions)
-        for obj in objects:
+        # Обработка первой линии
+        objects1 = process_line(frame, prev_frame, clicked_positions, x_start1, y_start1, x_end1, y_end1)
+        for obj in objects1:
+            click_object(obj)
+
+        # Обработка второй линии
+        objects2 = process_line(frame, prev_frame, clicked_positions, x_start2, y_start2, x_end2, y_end2)
+        for obj in objects2:
             click_object(obj)
 
         prev_frame = frame
@@ -175,12 +195,12 @@ if __name__ == "__main__":
 
     while True:
         print("Выберите опцию:")
-        print("1. Калибровать линию")
+        print("1. Калибровать линии")
         print("2. Запустить основную программу")
         choice = input("Введите номер опции: ")
 
         if choice == "1":
-            calibrate_line()
+            calibrate_lines()
         elif choice == "2":
             print("Запуск основной программы...")
             time.sleep(2)
