@@ -5,8 +5,6 @@ import cv2
 from PIL import ImageGrab
 import keyboard
 
-# Начальная точка: (2113, 500)
-# Конечная точка: (2862, 500)
 x_start, y_start = 2113, 500
 x_end, y_end = 2862, 500
 
@@ -18,11 +16,16 @@ def capture_screen():
     return frame
 
 
+def is_gray(pixel, threshold=10):
+    return abs(int(pixel[0]) - int(pixel[1])) < threshold and abs(int(pixel[1]) - int(pixel[2])) < threshold
+
+
 def process_line(frame, prev_frame):
     global x_start, y_start, x_end, y_end
     if y_end >= frame.shape[0] or x_end >= frame.shape[1] or y_start >= frame.shape[0] or x_start >= frame.shape[1]:
         print("Координаты линии выходят за пределы изображения.")
         return []
+
     line = frame[y_start:y_end + 1, x_start:x_end + 1]
     prev_line = prev_frame[y_start:y_end + 1, x_start:x_end + 1]
     if line.size == 0 or prev_line.size == 0:
@@ -39,12 +42,13 @@ def process_line(frame, prev_frame):
 
     for contour in contours:
         x, y, w, h = cv2.boundingRect(contour)
-        # Отладочная информация
-        print(f"Contour: x={x}, y={y}, w={w}, h={h}")
-        # Добавляем фильтрацию по ширине и высоте, чтобы отсеять линии фона
         if 3 < w < 50:
             center_x = x + x_start + w // 2
             center_y = y + y_start + h // 2
+            # Check if the object is gray
+            if is_gray(line[y, x]):
+                print(f"Skipped gray object at ({center_x}, {center_y})")
+                continue
             objects.append({"position": (center_x, center_y)})
 
     return objects
@@ -83,7 +87,7 @@ def main():
 
         prev_frame = frame
 
-        time.sleep(0.1)  # Немного задержки, чтобы уменьшить нагрузку на систему
+        time.sleep(0.01)  # Reduced delay for faster processing
 
         if keyboard.is_pressed("esc"):  # ESC key to stop
             print("Программа остановлена.")
