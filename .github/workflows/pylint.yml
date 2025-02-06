@@ -1,6 +1,7 @@
 name: Python Lint
 
 on:
+  push:
   pull_request:
 
 jobs:
@@ -20,14 +21,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip/wheels
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-${{ matrix.python-version }}-
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -35,9 +28,7 @@ jobs:
           pip install pylint flake8
 
       - name: Run pylint
-        run: |
-          pylint $(git ls-files '*.py') || true
+        run: pylint $(git ls-files '*.py')
 
       - name: Run flake8
-        run: |
-          flake8 --config=.flake8 || true
+        run: flake8 --config=.flake8
