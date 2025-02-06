@@ -1,7 +1,7 @@
-import pyautogui
 import threading
-import keyboard
 import time
+import pyautogui
+import keyboard
 
 time.sleep(2)
 
@@ -77,3 +77,9 @@ for thread in threads:
     thread.join()
 
 print("Программа завершена.")
+
+
+# # Функция для определения, является ли пиксель серым
+# def is_gray(pixel):
+#     """Проверяет, является ли пиксель серым."""
+#     return pixel[1] < 10
