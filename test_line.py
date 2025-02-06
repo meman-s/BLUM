@@ -1,7 +1,6 @@
+import tkinter as tk
 import cv2
 import numpy as np
-import pyautogui
-import tkinter as tk
 from PIL import Image, ImageTk, ImageGrab
 
 # Координаты линии, по которой будем отслеживать изменения цвета
@@ -15,11 +14,13 @@ color_ranges = {
     "ice": ([242, 231, 149], [94, 98, 242])    # Голубой
 }
 
+
 def capture_screen():
     screenshot = ImageGrab.grab()
     frame = np.array(screenshot, dtype=np.uint8)
     frame = frame[:, :, ::-1]  # Convert RGB to BGR
     return frame
+
 
 def process_line(frame):
     global x_start, y_start, x_end, y_end
@@ -43,6 +44,7 @@ def process_line(frame):
 
     return objects
 
+
 def show_image_with_line(frame):
     root = tk.Tk()
     root.title("Calibration")
@@ -60,6 +62,7 @@ def show_image_with_line(frame):
     # Display the window
     root.mainloop()
 
+
 def main():
     frame = capture_screen()
 
@@ -75,6 +78,7 @@ def main():
         print("Обнаруженные объекты на линии:", objects)
     else:
         print("Ошибка: кадр не является numpy массивом")
+
 
 if __name__ == "__main__":
     main()
