@@ -27,7 +27,11 @@ jobs:
           pip install pylint flake8
 
       - name: Run pylint
-        run: pylint $(git ls-files '*.py') || true
+        run: |
+          pylint $(git ls-files '*.py') | tee pylint.log
+          if grep -qE "E[0-9]{4}:" pylint.log; then exit 1; fi
 
       - name: Run flake8
-        run: flake8 --config=.flake8 || true
+        run: |
+          flake8 --config=.flake8 | tee flake8.log
+          if grep -qE "E[0-9]{3}|F[0-9]{3}" flake8.log; then exit 1; fi
